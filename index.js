@@ -28,14 +28,42 @@ mongoose.connect(mongo_URI)
 // Basic Config
 app.use(cors())
 app.use(express.static('public'))
+app.use(parser.json());  // to support JSON-encoded bodies
+app.use(parser.urlencoded({ extended: true }));  // to support URL-encoded bodies
 
 // GET - [base_url]/
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-// 
+// POST - [base_url]/api/users
+app.post('/api/users', (req, res) => {
+  let entry = new users();
+  entry.username = req.body.username;
+  entry.save((err, doc) => {
+    if (!err) {
+      res.json({
+        username: doc.username,
+        _id: doc._id,
+      });
+    } else {
+      console.error(err);
+    }
+  });
+});
 
+// GET - [base_url]/api/users
+app.get('/api/users', (req, res) => {
+  users
+  .find({})
+  .exec((err, doc) => {
+    if (!err) {
+      res.json(doc);
+    } else {
+      console.error(err);
+    }
+  });
+});
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
