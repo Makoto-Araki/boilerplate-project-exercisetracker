@@ -65,6 +65,48 @@ app.get('/api/users', (req, res) => {
   });
 });
 
+// POST - [base_url]/api/users/:_id/exercises
+app.post('/api/users/:_id/exercises', (req, res) => {
+  users
+  .findById({ _id: req.params._id })
+  .exec((err1, doc1) => {
+    if(!err1) {
+      
+      users
+      .updateOne(
+        { _id: { $eq: req.params._id } },
+        { $push:
+          { log: 
+            { 
+              description: req.body.description,
+              duration: req.body.duration,
+              date: (new Date(req.body.date)),
+            }
+          }
+        },
+        (err2, doc2) => {
+          if (!err2) {
+            
+            res.json({
+              _id: req.params._id,
+              username: doc1.username,
+              date: (new Date(req.body.date)).toDateString(),
+              duration: parseInt(req.body.duration),
+              description: req.body.description,
+            });
+            
+          } else {
+            console.error(err2);
+          }
+        }
+      );
+
+    } else {
+      console.error(err1); 
+    }
+  });
+});
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 })

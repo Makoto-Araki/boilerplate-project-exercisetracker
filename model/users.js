@@ -14,7 +14,7 @@ const subSchema = mongoose.Schema(
 // Main schema
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
-  logs: [subSchema]
+  log: [subSchema]
 });
 
 // Model export
