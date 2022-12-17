@@ -138,31 +138,53 @@ app.post('/api/users/:_id/exercises',
 
 // GET - [base_url]/api/users/:_id/logs
 app.get('/api/users/:_id/logs', (req, res) => {
-  //*
   users
-    .findById({ _id: req.params._id })
-    .exec((err1, doc1) => {
-      if (!err1) {
+  .findById({ _id: req.params._id })
+  .exec((err1, doc1) => {
+    if (!err1) {
+
+      let { from: p_from, to: p_to, limit: p_limit } = req.query;
+      let count = 0;
+      let result = {};
+      let array = [];
+      let temp = {};
+
+      // Exercise Information Constructs
+      for (let i = 0; i < doc1.log.length; i++) {
+        if (typeof p_limit !== 'undefined' && count === parseInt(p_limit)) {
+          break;
+        }
+
+        if (typeof p_from !== 'undefined' && doc1.log[i].date < (new Date(p_from))) {
+          continue;
+        }
+
+        if (typeof p_to  !== 'undefined' && doc1.log[i].date > (new Date(p_to))) {
+          continue;
+        }
         
-        // For Debug
-        // console.log(`Debug : username = ${doc1.username}`);
-        // console.log(`Debug : count = ${doc1.log.length}`);
-        // console.log(`Debug : _id = ${req.params._id}`);
-        // console.log(`Debug : log = ${doc1.log}`);
-        // console.log(`-------------------------`);
-        
-        res.json({
-          username: doc1.username,
-          count: doc1.log.length,
-          _id: req.params._id,
-          log: doc1.log,
-        });
-        
-      } else {
-        console.error(err1)
+        temp.description = doc1.log[i].description;
+        temp.duration = doc1.log[i].duration;
+        temp.date = doc1.log[i].date.toDateString();
+        array.push(temp);
+        count++;
       }
-    });
-  //*/
+
+      // Return JSON Object constructs
+      result._id = req.params._id;        
+      result.username = doc1.username;
+      if (typeof p_from !== 'undefined') result.from = (new Date(p_from)).toDateString();
+      if (typeof p_to  !== 'undefined') result.to = (new Date(p_to)).toDateString();
+      result.count = (count !== 0) ? count : doc1.log.length;
+      result.log = array;
+
+      // Return JSON
+      res.json(result);
+        
+    } else {
+      console.error(err1)
+    }
+  });
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
