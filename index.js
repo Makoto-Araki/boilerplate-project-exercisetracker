@@ -5,7 +5,8 @@ const parser = require('body-parser');
 const users = require('./model/users');
 const cors = require('cors');
 const app = express();
-require('dotenv').config()
+require('dotenv').config();
+const { check, validationResult } = require('express-validator');
 
 // Secrets
 const user = process.env['user']
@@ -22,8 +23,8 @@ mongoose.set('strictQuery', false);
 
 // MongoDB Connect
 mongoose.connect(mongo_URI)
-.then(() => console.log('Database connection successed'))
-.catch(err => console.error(err))
+  .then(() => console.log('Database connection successed'))
+  .catch(err => console.error(err))
 
 // Basic Config
 app.use(cors())
@@ -55,56 +56,113 @@ app.post('/api/users', (req, res) => {
 // GET - [base_url]/api/users
 app.get('/api/users', (req, res) => {
   users
-  .find({})
-  .exec((err, doc) => {
-    if (!err) {
-      res.json(doc);
-    } else {
-      console.error(err);
-    }
-  });
+    .find({})
+    .exec((err, doc) => {
+      if (!err) {
+        res.json(doc);
+      } else {
+        console.error(err);
+      }
+    });
 });
 
 // POST - [base_url]/api/users/:_id/exercises
-app.post('/api/users/:_id/exercises', (req, res) => {
-  users
-  .findById({ _id: req.params._id })
-  .exec((err1, doc1) => {
-    if(!err1) {
-      
-      users
-      .updateOne(
-        { _id: { $eq: req.params._id } },
-        { $push:
-          { log: 
-            { 
-              description: req.body.description,
-              duration: req.body.duration,
-              date: (new Date(req.body.date)),
+app.post('/api/users/:_id/exercises',
+[ // express-validator check functions
+  check('_id', '_id can not be empty').notEmpty(),
+  check('description', 'description can not be empty').notEmpty(),
+  check('duration', 'duration can not be empty').notEmpty(),
+  check('duration', 'duration should be integer').isInt(),
+  check('date', 'date is invalid').isDate(),
+],
+(req, res) => {
+  
+  // Receive error information
+  let errInfo = validationResult(req);
+  
+  if (!errInfo.isEmpty()) {
+    res.send(errInfo);
+  } else {
+    users
+    .findById({ _id: req.params._id })
+    .exec((err1, doc1) => {
+      if (!err1) {
+
+        // Initialize date
+        let myDate = new Date();
+        
+        if (req.body.date === '') {
+          myDate = new Date();
+        } else {
+          myDate = new Date(req.body.date);
+        }
+
+        // For Debug
+        // console.log(`Debug : ${myDate.toDateString()}`);
+        
+        users
+        .updateOne(
+          { _id: { $eq: req.params._id } },
+          { $push:
+            { log:
+              {
+                description: req.body.description,
+                duration: req.body.duration,
+                date: myDate,
+              }
+            }
+          },
+          (err2, doc2) => {
+            if (!err2) {
+
+              res.json({
+                _id: req.params._id,
+                username: doc1.username,
+                date: myDate.toDateString(),
+                duration: parseInt(req.body.duration),
+                description: req.body.description,
+              });
+
+            } else {
+              console.error(err2);
             }
           }
-        },
-        (err2, doc2) => {
-          if (!err2) {
-            
-            res.json({
-              _id: req.params._id,
-              username: doc1.username,
-              date: (new Date(req.body.date)).toDateString(),
-              duration: parseInt(req.body.duration),
-              description: req.body.description,
-            });
-            
-          } else {
-            console.error(err2);
-          }
-        }
-      );
+        );
 
-    } else {
-      console.error(err1); 
-    }
-  });
+      } else {
+        console.error(err1);
+      }
+    });
+  }
+});
+
+// GET - [base_url]/api/users/:_id/logs
+app.get('/api/users/:_id/logs', (req, res) => {
+  //*
+  users
+    .findById({ _id: req.params._id })
+    .exec((err1, doc1) => {
+      if (!err1) {
+        
+        // For Debug
+        // console.log(`Debug : username = ${doc1.username}`);
+        // console.log(`Debug : count = ${doc1.log.length}`);
+        // console.log(`Debug : _id = ${req.params._id}`);
+        // console.log(`Debug : log = ${doc1.log}`);
+        // console.log(`-------------------------`);
+        
+        res.json({
+          username: doc1.username,
+          count: doc1.log.length,
+          _id: req.params._id,
+          log: doc1.log,
+        });
+        
+      } else {
+        console.error(err1)
+      }
+    });
+  //*/
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {

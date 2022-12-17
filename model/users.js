@@ -4,17 +4,17 @@ const mongoose = require('mongoose');
 // Sub schema
 const subSchema = mongoose.Schema(
   {
+    _id: false,
     description: { type: String },
     duration: { type: Number },
-    date: { type: Date, default: Date.now }
-  }, 
-  {_id: false}
+    date: { type: Date, default: Date.now },
+  }
 );
 
 // Main schema
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
-  log: [subSchema]
+  log: { type: [subSchema] },  // Array of subSchema
 });
 
 // Model export
