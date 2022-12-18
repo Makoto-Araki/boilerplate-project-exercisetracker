@@ -107,7 +107,7 @@ app.post('/api/users/:_id/exercises',
             { log:
               {
                 description: req.body.description,
-                duration: req.body.duration,
+                duration: parseInt(req.body.duration),
                 date: myDate,
               }
             }
@@ -145,42 +145,81 @@ app.get('/api/users/:_id/logs', (req, res) => {
 
       let { from: p_from, to: p_to, limit: p_limit } = req.query;
       let count = 0;
-      let result = {};
-      let array = [];
-      let temp = {};
-
-      // Exercise Information Constructs
+      //let result = {};
+      let exercises = [];
+      
+      // Exercise information array constructs
       for (let i = 0; i < doc1.log.length; i++) {
-        if (typeof p_limit !== 'undefined' && count === parseInt(p_limit)) {
+        if (typeof p_limit !== undefined && count === parseInt(p_limit)) {
           break;
         }
 
-        if (typeof p_from !== 'undefined' && doc1.log[i].date < (new Date(p_from))) {
+        if (typeof p_from !== undefined && doc1.log[i].date < (new Date(p_from))) {
           continue;
         }
 
-        if (typeof p_to  !== 'undefined' && doc1.log[i].date > (new Date(p_to))) {
+        if (typeof p_to !== undefined && doc1.log[i].date > (new Date(p_to))) {
           continue;
         }
+
+        // For Debug
+        // console.log(`Debug : ${doc1.log[i].description}`);
+        // console.log(`Debug : ${doc1.log[i].duration}`);
+        // console.log(`Debug : ${doc1.log[i].date.toDateString()}`);
+        // console.log(`Debug : --------------------------`);
         
-        temp.description = doc1.log[i].description;
-        temp.duration = doc1.log[i].duration;
-        temp.date = doc1.log[i].date.toDateString();
-        array.push(temp);
+        let temp = {
+          description: doc1.log[i].description,
+          duration: doc1.log[i].duration,
+          date: doc1.log[i].date.toDateString(),
+        }
+
+        // For Debug
+        // console.dir(temp, { depth: null });
+        // console.log(`Debug : --------------------------`);
+        
+        exercises.push(temp);
         count++;
       }
 
-      // Return JSON Object constructs
-      result._id = req.params._id;        
-      result.username = doc1.username;
-      if (typeof p_from !== 'undefined') result.from = (new Date(p_from)).toDateString();
-      if (typeof p_to  !== 'undefined') result.to = (new Date(p_to)).toDateString();
-      result.count = (count !== 0) ? count : doc1.log.length;
-      result.log = array;
+      // Object Array sorts
+      exercises.sort((a, b) => (new Date(b.date)) - (new Date(a.date)));
+
+      // For Debug
+      // console.dir(exercises, { depth: null });
+      // console.log(`Debug : --------------------------`);
+      
+      // Return Object constructs
+      //result.username = doc1.username;
+      //result.count = (count !== 0) ? count : doc1.log.length;
+      //result._id = req.params._id;
+      //if (typeof p_from !== undefined) result.from = (new Date(p_from)).toDateString();
+      //if (typeof p_to !== undefined) result.to = (new Date(p_to)).toDateString();
+      //result.log = exercises;
+
+      // Return Object
+      let result = {
+        username: doc1.username,
+        count: (count !== 0) ? count : doc1.log.length,
+        _id: req.params._id,
+        log: exercises,
+      }
+
+      if (typeof p_from !== undefined) {
+        result.from = new Date(p_from).toDateString();
+      }
+      
+      if (typeof p_to !== undefined) {
+        result.to = new Date(p_to).toDateString();
+      }
+
+      // For Debug
+      // console.dir(result, { depth: null });
+      // console.log(`Debug : --------------------------`);
 
       // Return JSON
       res.json(result);
-        
+      
     } else {
       console.error(err1)
     }

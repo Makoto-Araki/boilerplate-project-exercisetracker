@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 const subSchema = mongoose.Schema(
   {
     _id: false,
-    description: { type: String },
-    duration: { type: Number },
+    description: { type: String, required: true },
+    duration: { type: Number, required: true },
     date: { type: Date, default: Date.now },
   }
 );
