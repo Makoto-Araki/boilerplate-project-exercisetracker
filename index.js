@@ -97,9 +97,6 @@ app.post('/api/users/:_id/exercises',
           myDate = new Date(req.body.date);
         }
 
-        // For Debug
-        // console.log(`Debug : ${myDate.toDateString()}`);
-        
         users
         .updateOne(
           { _id: { $eq: req.params._id } },
@@ -145,29 +142,23 @@ app.get('/api/users/:_id/logs', (req, res) => {
 
       let { from: p_from, to: p_to, limit: p_limit } = req.query;
       let count = 0;
-      //let result = {};
+      let result = {};
       let exercises = [];
       
       // Exercise information array constructs
       for (let i = 0; i < doc1.log.length; i++) {
-        if (typeof p_limit !== undefined && count === parseInt(p_limit)) {
+        if (typeof p_limit !== 'undefined' && count === parseInt(p_limit)) {
           break;
         }
 
-        if (typeof p_from !== undefined && doc1.log[i].date < (new Date(p_from))) {
+        if (typeof p_from !== 'undefined' && doc1.log[i].date < (new Date(p_from))) {
           continue;
         }
 
-        if (typeof p_to !== undefined && doc1.log[i].date > (new Date(p_to))) {
+        if (typeof p_to !== 'undefined' && doc1.log[i].date > (new Date(p_to))) {
           continue;
         }
 
-        // For Debug
-        // console.log(`Debug : ${doc1.log[i].description}`);
-        // console.log(`Debug : ${doc1.log[i].duration}`);
-        // console.log(`Debug : ${doc1.log[i].date.toDateString()}`);
-        // console.log(`Debug : --------------------------`);
-        
         let temp = {
           description: doc1.log[i].description,
           duration: doc1.log[i].duration,
@@ -190,28 +181,12 @@ app.get('/api/users/:_id/logs', (req, res) => {
       // console.log(`Debug : --------------------------`);
       
       // Return Object constructs
-      //result.username = doc1.username;
-      //result.count = (count !== 0) ? count : doc1.log.length;
-      //result._id = req.params._id;
-      //if (typeof p_from !== undefined) result.from = (new Date(p_from)).toDateString();
-      //if (typeof p_to !== undefined) result.to = (new Date(p_to)).toDateString();
-      //result.log = exercises;
-
-      // Return Object
-      let result = {
-        username: doc1.username,
-        count: (count !== 0) ? count : doc1.log.length,
-        _id: req.params._id,
-        log: exercises,
-      }
-
-      if (typeof p_from !== undefined) {
-        result.from = new Date(p_from).toDateString();
-      }
-      
-      if (typeof p_to !== undefined) {
-        result.to = new Date(p_to).toDateString();
-      }
+      result.username = doc1.username;
+      result.count = (count !== 0) ? count : doc1.log.length;
+      result._id = req.params._id;
+      if (typeof p_from !== 'undefined') result.from = (new Date(p_from)).toDateString();
+      if (typeof p_to !== 'undefined') result.to = (new Date(p_to)).toDateString();
+      result.log = exercises;
 
       // For Debug
       // console.dir(result, { depth: null });
