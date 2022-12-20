@@ -73,7 +73,7 @@ app.post('/api/users/:_id/exercises',
   check('description', 'description can not be empty').notEmpty(),
   check('duration', 'duration can not be empty').notEmpty(),
   check('duration', 'duration should be integer').isInt(),
-  check('date', 'date is invalid').isDate(),
+  //check('date', 'date is invalid').isDate(),
 ],
 (req, res) => {
   
@@ -91,7 +91,7 @@ app.post('/api/users/:_id/exercises',
         // Initialize date
         let myDate = new Date();
         
-        if (req.body.date === '') {
+        if (req.body.date === '' || !req.body.hasOwnProperty('date')) {
           myDate = new Date();
         } else {
           myDate = new Date(req.body.date);
